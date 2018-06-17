@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+
+<title>India Human Development Survey (IHDS)</title>
+
+<script src="index_files/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="index_files/bootstrap-3.3.6/css/bootstrap.min.css" rel="stylesheet" />
+<script src="index_files/bootstrap-3.3.6/js/bootstrap.min.js"></script>
+<script src="index_files/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<script src="index_files/navigation-1.1/tabsets.js"></script>
+<script src="index_files/navigation-1.1/codefolding.js"></script>
+<link href="index_files/magnific-popup-1.1.0/magnific-popup.css" rel="stylesheet" />
+<script src="index_files/magnific-popup-1.1.0/jquery.magnific-popup.min.js"></script>
+<link href="index_files/clean-0.1/clean.css" rel="stylesheet" />
+<script src="index_files/clean-0.1/clean.js"></script>
+
+
+
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+</style>
+<div class="container-fluid main-container">
+  <div class="row">
+     <div class="col-md-10">
+
+
+
+
+<div id="header">
+<h1 class="title">India Human Development Survey (IHDS)</h1>
+</div>
+
+<div id="content">
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>The IHDS is summarized <a href="https://www.ihds.umd.edu/">here</a> and can be downloaded from <a href="https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507">the ICPSR</a>. We have developed an R package called <a href="">tidyICPSR</a> that provides functionality to get the two studies downloaded and formatted into a <a href="http://garrettgman.github.io/tidying/">tidy format</a> with all the column names and column values correct.</p>
+</div>
+<div id="ihds-exploration" class="section level1">
+<h1>2011 IHDS Exploration</h1>
+<div id="household-income" class="section level2">
+<h2>Household Income</h2>
+<p>The household income numbers are close to the reports I could find. The median household income from this study data is 31828 NRP.</p>
+<ul>
+<li><a href="https://cmie.com/kommon/bin/sr.php?kall=warticle&amp;dt=2016-07-04%2013:45:29&amp;msec=170">https://cmie.com/kommon/bin/sr.php?kall=warticle&amp;dt=2016-07-04%2013:45:29&amp;msec=170</a></li>
+<li><a href="https://www.quora.com/What-is-the-median-income-of-households-in-different-states-of-India" class="uri">https://www.quora.com/What-is-the-median-income-of-households-in-different-states-of-India</a></li>
+</ul>
+<p><img src="index_files/figure-html/income_viz-1.png" width="1152" /></p>
+</div>
+<div id="household-size" class="section level2">
+<h2>Household Size</h2>
+<p>The household count numbers seem to make sense based on numbers reported at the following links. The median household size from this study data is 5.</p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Indian_states_ranking_by_household_size" class="uri">https://en.wikipedia.org/wiki/Indian_states_ranking_by_household_size</a></li>
+<li><a href="http://www.arcgis.com/home/item.html?id=6cf22970ea8c4b338a196879397a76e4" class="uri">http://www.arcgis.com/home/item.html?id=6cf22970ea8c4b338a196879397a76e4</a></li>
+</ul>
+<p><img src="index_files/figure-html/size_viz-1.png" width="1152" /></p>
+</div>
+<div id="under-5-years-old-height-distributions" class="section level2">
+<h2>Under 5 years old height distributions</h2>
+<p>Some data quality issues will require further investigation. Also, the ages are grouped by year in the data.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-1-1.png" width="1152" /></p>
+</div>
+<div id="year-olds-heights-by-income-category" class="section level2">
+<h2>0-1 year olds heights by income category</h2>
+<p>Remember that this figure shows all newborns from 0-12 months.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="1152" /></p>
+</div>
+<div id="under-5-years-old-weight-distributions" class="section level2">
+<h2>Under 5 years old weight distributions</h2>
+<p>Some data quality issues will require further investigation.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="1152" /></p>
+</div>
+<div id="year-olds-weights-by-income-category" class="section level2">
+<h2>0-1-year-olds weights by income category</h2>
+<p>Remember that this figure shows all newborns from 0-12 months.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="1152" /></p>
+</div>
+</div>
+<div id="ihds-data-prep" class="section level1">
+<h1>IHDS Data Prep</h1>
+<p>The development R package <a href="">tidyICPSR</a> has the functions used to download and prep the data.</p>
+</div>
+<div id="code" class="section level1">
+<h1>Code</h1>
+<p>All of the R code to download, process, and replicate this analysis (including the code that generates this document) is available <a href="https://github.com/hathawayj/ihds">here</a>.</p>
+</div>
+</div>
+
+
+    </div>
+    <div class="col-md-2">
+      <div id="toc">
+      	<button type="button" class="close">×</button>
+        <ul>
+        <li><a href="#introduction">Introduction</a></li>
+        <li><a href="#ihds-exploration">2011 IHDS Exploration</a><ul>
+        <li><a href="#household-income">Household Income</a></li>
+        <li><a href="#household-size">Household Size</a></li>
+        <li><a href="#under-5-years-old-height-distributions">Under 5 years old height distributions</a></li>
+        <li><a href="#year-olds-heights-by-income-category">0-1 year olds heights by income category</a></li>
+        <li><a href="#under-5-years-old-weight-distributions">Under 5 years old weight distributions</a></li>
+        <li><a href="#year-olds-weights-by-income-category">0-1-year-olds weights by income category</a></li>
+        </ul></li>
+        <li><a href="#ihds-data-prep">IHDS Data Prep</a></li>
+        <li><a href="#code">Code</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+$(document).ready(function () {
+
+  // add bootstrap table styles to pandoc tables
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+
+});
+</script>
+
+<script>
+$(document).ready(function () {
+ 	    $('#content img')
+ 	  .addClass("image-lb");
+  $('#content').magnificPopup({
+	      type:'image',
+	      closeOnContentClick: false,
+	      delegate: 'img',
+	      gallery: {enabled: false },
+	      image: {
+	        verticalFit: true,
+          titleSrc: 'alt'
+	      }
+ 	    });
+ 	});
+</script>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

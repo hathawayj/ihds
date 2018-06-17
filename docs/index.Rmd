@@ -1,0 +1,212 @@
+---
+title: "India Human Development Survey (IHDS)"
+output:
+  rmdformats::html_clean:
+    fig_width: 8
+    fig_height: 6
+    highlight: kate
+    thumbnails: false
+    lightbox: true
+    gallery: false
+    self_contained: false
+---
+
+```{r knitr_init, echo=FALSE, warning=FALSE, message=FALSE, results="asis"}
+#devtools::install_github("hathawayj/tidyICPSR")
+#install.packages("pacman")
+pacman::p_load(knitr, rmdformats, tidyverse, ggthemes, forcats, geofacet, tidyICPSR)
+
+## Global options
+options(max.print = "75")
+opts_chunk$set(
+  echo = FALSE,
+  # cache = TRUE,
+  prompt = FALSE,
+  tidy = FALSE,
+  comment = NA,
+  message = FALSE,
+  warning = FALSE)
+opts_knit$set(width = 75)
+```
+
+# Introduction
+
+The IHDS is summarized [here](https://www.ihds.umd.edu/) and can be downloaded from [the ICPSR](https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507).  We have developed an R package called [tidyICPSR]() that provides functionality to get the two studies downloaded and formatted into a [tidy format](http://garrettgman.github.io/tidying/) with all the column names and column values correct.
+
+Note that the IHDS study collected data on subjects from the Union territories of India.  They are not shown in the graphics below. 
+
+# 2011 IHDS Exploration
+
+```{r loaddata}
+
+ind11 <- read_rds(path = "../data/artifacts/2011_36151_India.Rds")
+
+
+### Build data items for plots
+### 
+
+dat <- ind11 %>%
+  mutate(stateid = str_remove_all(stateid, " [:digit:]+") %>% 
+           str_replace_all("&", "and") %>% str_replace_all("Orissa", "Odisha"),
+         ro3 = str_remove_all(ro3, " [:digit:]+")) %>%
+  select(idperson, stateid, hhid, distid, psuid, hhsplitid, idhh, 
+         anthro_id = ap3, age = ro5, height1 = ap5, height2 = ap6, 
+         anthro_position = ap7, weight1 = ap8, weight2 = ap9, 
+         sex = ro3, relation_head = ro4, diarrhea = sm7, 
+         hours_work_year = wkhours, annual_wages = wsearn)
+
+household <- dat %>%
+  group_by(hhid, stateid, distid, psuid, hhsplitid, idhh) %>%
+  summarise(n = n(), children = sum(age <= 18, na.rm = TRUE), 
+            household_wages = sum(annual_wages, na.rm = TRUE),
+            household_hours = sum(hours_work_year, na.rm = TRUE)) %>%
+  ungroup()
+
+
+kids <- dat %>%
+  filter(age <= 5) %>% 
+  left_join(household)
+
+```
+
+
+## Household Income
+
+The household income numbers are close to the reports I could find. The median household income from this study data is `r as.character(round(median(household$household_wages),0))` NRP.
+
+ - https://cmie.com/kommon/bin/sr.php?kall=warticle&dt=2016-07-04%2013:45:29&msec=170
+ - https://www.quora.com/What-is-the-median-income-of-households-in-different-states-of-India
+
+```{r income_values}
+state_labels <- household %>% 
+  group_by(stateid) %>%
+  summarise(sum = sum(n), mean = mean(household_wages, na.rm = TRUE), median = median(household_wages, na.rm = TRUE))
+```
+
+
+
+```{r income_viz, fig.height=16, fig.width = 12}
+household %>%
+  ggplot(aes(x = household_wages/10000)) +
+  geom_histogram() +
+  theme_bw() +
+  labs(x = "Household wages (10,000 INR)", y = "Count", title = "Distribution of Household Income") +
+  facet_geo(~stateid, grid = india_grid2, scales = "free") 
+
+```
+
+
+## Household Size
+
+The household count numbers seem to make sense based on numbers reported at the following links. The median household size from this study data is `r round(median(household$n),2)`.
+
+- https://en.wikipedia.org/wiki/Indian_states_ranking_by_household_size
+- http://www.arcgis.com/home/item.html?id=6cf22970ea8c4b338a196879397a76e4
+
+
+```{r size_viz, fig.height=16, fig.width = 12}
+household %>%
+  ggplot(aes(x = n)) +
+  geom_histogram(color = "white") +
+# geom_vline(aes(xintercept = median), data = state_labels) +
+  theme_bw() +
+  labs(x = "Number in household", y = "Count", title = "Distribution of Household Size") +
+  scale_x_continuous(breaks = seq(0,30, by = 5), limits = c(0, 15)) +
+  theme(panel.grid.minor = element_blank()) +
+  facet_geo(~stateid, grid = india_grid2,  scales = "free_y") 
+
+```
+
+## Under 5 years old height distributions
+
+Some data quality issues will require further investigation. Also, the ages are grouped by year in the data.
+
+```{r, fig.height=16, fig.width = 12}
+# Household heights by age
+kids %>%
+  filter(age <= 5) %>%
+  ggplot(aes(y = height2 * 0.0328084, x = factor(age)), fill = "darkgrey") +
+  geom_boxplot() +
+#  geom_jitter(aes(color = sex), alpha = .5, width = .25) +
+  facet_geo(~stateid, grid = india_grid2) +
+  theme_bw() +
+  scale_color_brewer(type = "qual") +
+  coord_cartesian(ylim = c(0, 4)) +
+  labs(y = "height (ft)", x = "gender", color = "gender", title = "Distribution of height by age group")
+
+```
+
+
+## 0-1 year olds heights by income category
+
+Remember that this figure shows all newborns from 0-12 months.
+
+```{r, fig.height=16, fig.width = 12}
+kids %>%
+  filter(age <= 1) %>%
+  mutate(income_groups = 
+           case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k",
+                      household_wages/ 10000 <= 5 ~ "between 25k & 50k",
+                      household_wages/ 10000 <= 10 ~ "between 50k & 100k",
+                      household_wages/ 10000 <= 25 ~ "between 100k & 250k",
+                      household_wages/ 10000 > 25 ~ "greater than 250k")) %>%
+  ggplot(aes(y =  height2 * 0.0328084, x = income_groups)) +
+  scale_y_continuous(limits = c(0, 3)) + 
+  geom_boxplot() +
+  facet_geo(~stateid, grid = india_grid2) +
+  labs(x = "Household wages", y = "height (ft)") +
+  coord_flip() +
+  theme_bw()
+```
+
+## Under 5 years old weight distributions
+
+Some data quality issues will require further investigation.
+
+```{r, fig.height=16, fig.width = 12}
+kids %>%
+  filter(age <= 5) %>%
+  ggplot(aes(y = weight2 * 2.20462, x = factor(age)), fill = "darkgrey") +
+  geom_boxplot() +
+  #  geom_jitter(aes(color = sex), alpha = .5, width = .25) +
+  facet_geo(~stateid, grid = india_grid2) +
+  theme_bw() +
+  scale_color_brewer(type = "qual") +
+  coord_cartesian(ylim = c(0, 45)) +
+  labs(y = "weight (lbs)", x = "gender", color = "gender", title = "Distribution of height by age group")
+
+
+```
+
+## 0-1-year-olds weights by income category
+
+Remember that this figure shows all newborns from 0-12 months.
+
+```{r, fig.height=16, fig.width = 12}
+kids %>%
+  filter(age <= 1) %>%
+  mutate(income_groups = 
+           case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k",
+                      household_wages/ 10000 <= 5 ~ "between 25k & 50k",
+                      household_wages/ 10000 <= 10 ~ "between 50k & 100k",
+                      household_wages/ 10000 <= 25 ~ "between 100k & 250k",
+                      household_wages/ 10000 > 25 ~ "greater than 250k")) %>%
+  ggplot(aes(y = weight2 * 2.200462, x = income_groups)) +
+  scale_y_continuous(limits = c(0, 25)) + 
+  geom_boxplot() +
+  facet_geo(~stateid, grid = india_grid2) +
+  labs(x = "Household wages", y = "weight (lbs)") +
+  coord_flip() +
+  theme_bw()
+```
+
+# IHDS Data Prep
+
+The development R package [tidyICPSR]() has the functions used to download and prep the data.
+
+# Code
+
+All of the R code to download, process, and replicate this analysis (including the code that generates this document) is available [here](https://github.com/hathawayj/ihds).
+
+
+
