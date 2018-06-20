@@ -69,10 +69,11 @@ img {
 <div id="content">
 <div id="introduction" class="section level1">
 <h1>Introduction</h1>
-<p>The IHDS is summarized <a href="https://www.ihds.umd.edu/">here</a> and can be downloaded from <a href="https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507">the ICPSR</a>. We have developed an R package called <a href="">tidyICPSR</a> that provides functionality to get the two studies downloaded and formatted into a <a href="http://garrettgman.github.io/tidying/">tidy format</a> with all the column names and column values correct.</p>
+<p>The IHDS is summarized <a href="https://www.ihds.umd.edu/">here</a> and can be downloaded from <a href="https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507">the ICPSR</a>. We have developed an R package called <a href="">tidyICPSR</a> that provides functionality to get the two studies downloaded and formatted into a <a href="http://garrettgman.github.io/tidying/">tidy format</a> with all the column names and column values correct. The package is still in early development and is currently meant more for a proof of concept and could be helpfull for those that would like to use R with the data from ICPSR.</p>
+<p>Note that the IHDS study collected data on subjects from the Union territories of India. They are not shown in the spatial graphics below.</p>
 </div>
-<div id="ihds-exploration" class="section level1">
-<h1>2011 IHDS Exploration</h1>
+<div id="ihds-exploration-individual" class="section level1">
+<h1>2011 IHDS Exploration (Individual)</h1>
 <div id="household-income" class="section level2">
 <h2>Household Income</h2>
 <p>The household income numbers are close to the reports I could find. The median household income from this study data is 31828 NRP.</p>
@@ -80,6 +81,9 @@ img {
 <li><a href="https://cmie.com/kommon/bin/sr.php?kall=warticle&amp;dt=2016-07-04%2013:45:29&amp;msec=170">https://cmie.com/kommon/bin/sr.php?kall=warticle&amp;dt=2016-07-04%2013:45:29&amp;msec=170</a></li>
 <li><a href="https://www.quora.com/What-is-the-median-income-of-households-in-different-states-of-India" class="uri">https://www.quora.com/What-is-the-median-income-of-households-in-different-states-of-India</a></li>
 </ul>
+<p>This graphic shows the meidan (dot) and the 25th and 75th percentiles (linerange) of household income for each region of India.</p>
+<p><img src="index_files/figure-html/income_viz_box-1.png" width="768" /></p>
+<p>This <a href="https://github.com/hafen/geofacet">geography based facet</a> of India provides histograms of the household income distribution by region in India.</p>
 <p><img src="index_files/figure-html/income_viz-1.png" width="1152" /></p>
 </div>
 <div id="household-size" class="section level2">
@@ -90,26 +94,36 @@ img {
 <li><a href="http://www.arcgis.com/home/item.html?id=6cf22970ea8c4b338a196879397a76e4" class="uri">http://www.arcgis.com/home/item.html?id=6cf22970ea8c4b338a196879397a76e4</a></li>
 </ul>
 <p><img src="index_files/figure-html/size_viz-1.png" width="1152" /></p>
+<p><img src="index_files/figure-html/size_viz_box-1.png" width="1152" /></p>
 </div>
 <div id="under-5-years-old-height-distributions" class="section level2">
 <h2>Under 5 years old height distributions</h2>
 <p>Some data quality issues will require further investigation. Also, the ages are grouped by year in the data.</p>
 <p><img src="index_files/figure-html/unnamed-chunk-1-1.png" width="1152" /></p>
 </div>
-<div id="year-olds-heights-by-income-category" class="section level2">
-<h2>0-1 year olds heights by income category</h2>
+<div id="year-old-heights-by-income-category" class="section level2">
+<h2>0-1 year old heights by income category</h2>
 <p>Remember that this figure shows all newborns from 0-12 months.</p>
 <p><img src="index_files/figure-html/unnamed-chunk-2-1.png" width="1152" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="1152" /></p>
 </div>
 <div id="under-5-years-old-weight-distributions" class="section level2">
 <h2>Under 5 years old weight distributions</h2>
 <p>Some data quality issues will require further investigation.</p>
-<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="1152" /></p>
-</div>
-<div id="year-olds-weights-by-income-category" class="section level2">
-<h2>0-1-year-olds weights by income category</h2>
-<p>Remember that this figure shows all newborns from 0-12 months.</p>
 <p><img src="index_files/figure-html/unnamed-chunk-4-1.png" width="1152" /></p>
+</div>
+<div id="year-old-weights-by-income-category" class="section level2">
+<h2>0-1-year-old weights by income category</h2>
+<p>Remember that this figure shows all newborns from 0-12 months.</p>
+<p><img src="index_files/figure-html/unnamed-chunk-5-1.png" width="1152" /></p>
+<p><img src="index_files/figure-html/unnamed-chunk-6-1.png" width="1152" /></p>
+</div>
+</div>
+<div id="ihds-exploration-births" class="section level1">
+<h1>2011 IHDS Exploration (Births)</h1>
+<div id="distribution-of-number-of-births-per-household" class="section level2">
+<h2>Distribution of number of births per household</h2>
+<p><img src="index_files/figure-html/unnamed-chunk-7-1.png" width="768" /></p>
 </div>
 </div>
 <div id="ihds-data-prep" class="section level1">
@@ -129,13 +143,16 @@ img {
       	<button type="button" class="close">×</button>
         <ul>
         <li><a href="#introduction">Introduction</a></li>
-        <li><a href="#ihds-exploration">2011 IHDS Exploration</a><ul>
+        <li><a href="#ihds-exploration-individual">2011 IHDS Exploration (Individual)</a><ul>
         <li><a href="#household-income">Household Income</a></li>
         <li><a href="#household-size">Household Size</a></li>
         <li><a href="#under-5-years-old-height-distributions">Under 5 years old height distributions</a></li>
-        <li><a href="#year-olds-heights-by-income-category">0-1 year olds heights by income category</a></li>
+        <li><a href="#year-old-heights-by-income-category">0-1 year old heights by income category</a></li>
         <li><a href="#under-5-years-old-weight-distributions">Under 5 years old weight distributions</a></li>
-        <li><a href="#year-olds-weights-by-income-category">0-1-year-olds weights by income category</a></li>
+        <li><a href="#year-old-weights-by-income-category">0-1-year-old weights by income category</a></li>
+        </ul></li>
+        <li><a href="#ihds-exploration-births">2011 IHDS Exploration (Births)</a><ul>
+        <li><a href="#distribution-of-number-of-births-per-household">Distribution of number of births per household</a></li>
         </ul></li>
         <li><a href="#ihds-data-prep">IHDS Data Prep</a></li>
         <li><a href="#code">Code</a></li>
