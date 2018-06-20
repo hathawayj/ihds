@@ -31,7 +31,7 @@ opts_knit$set(width = 75)
 
 # Introduction
 
-The IHDS is summarized [here](https://www.ihds.umd.edu/) and can be downloaded from [the ICPSR](https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507).  We have developed an R package called [tidyICPSR]() that provides functionality to get the two studies downloaded and formatted into a [tidy format](http://garrettgman.github.io/tidying/) with all the column names and column values correct. The package is still in early development and is currently meant more for a proof of concept and could be helpfull for those that would like to use R with the data from ICPSR.
+The IHDS is summarized [here](https://www.ihds.umd.edu/){target="blank"} and can be downloaded from [the ICPSR](https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507){target="blank"}.  We have developed an R package called [tidyICPSR](https://github.com/hathawayj/tidyICPSR){target="blank"} that provides functionality to get the two studies downloaded and formatted into a [tidy format](http://garrettgman.github.io/tidying/){target="blank"} with all the column names and column values correct. The package is still in early development and is currently meant more for a proof of concept and could be helpfull for those that would like to use R with the data from ICPSR.
 
 Note that the IHDS study collected data on subjects from the Union territories of India.  They are not shown in the spatial graphics below. 
 
