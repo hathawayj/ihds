@@ -2,6 +2,7 @@
 title: "India Human Development Survey (IHDS)"
 output:
   rmdformats::html_clean:
+    code_folding: hide
     fig_width: 8
     fig_height: 6
     highlight: kate
@@ -14,12 +15,12 @@ output:
 ```{r knitr_init, echo=FALSE, warning=FALSE, message=FALSE, results="asis"}
 #devtools::install_github("hathawayj/tidyICPSR")
 #install.packages("pacman")
-pacman::p_load(knitr, rmdformats, tidyverse, ggthemes, forcats, geofacet, tidyICPSR)
-
+#devtools::install_github("hafen/geofacet", ref = "feature-hexmapr")
+library(knitr)
 ## Global options
 options(max.print = "75")
 opts_chunk$set(
-  echo = FALSE,
+  echo = TRUE,
   # cache = TRUE,
   prompt = FALSE,
   tidy = FALSE,
@@ -31,14 +32,25 @@ opts_knit$set(width = 75)
 
 # Introduction
 
-The IHDS is summarized [here](https://www.ihds.umd.edu/){target="blank"} and can be downloaded from [the ICPSR](https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507){target="blank"}.  We have developed an R package called [tidyICPSR](https://github.com/hathawayj/tidyICPSR){target="blank"} that provides functionality to get the two studies downloaded and formatted into a [tidy format](http://garrettgman.github.io/tidying/){target="blank"} with all the column names and column values correct. The package is still in early development and is currently meant more for a proof of concept and could be helpfull for those that would like to use R with the data from ICPSR.
+## Visualization
 
-Note that the IHDS study collected data on subjects from the Union territories of India.  They are not shown in the spatial graphics below. 
+The visualizations below provide an example of using [R](https://www.r-project.org/){target="blank"} to summarize and visualize anthropometric data and other household data that was collected in India during the [IHDS study](https://www.ihds.umd.edu/){target="blank"}.  The scripts used to get and create the data for the visualizaings below can be found [here](https://github.com/hathawayj/ihds/tree/master/scripts){target="blank"}. The IHDS can be downloaded from [the ICPSR](https://www.icpsr.umich.edu/icpsrweb/DSDR/series/507){target="blank"}.
+
+- **[data download and format scripts](https://github.com/hathawayj/ihds/tree/master/scripts){target="blank"}**
+
+## tidyICPSR
+
+We have developed an R package called [tidyICPSR](https://github.com/hathawayj/tidyICPSR){target="blank"} that provides functionality to get the two studies downloaded and formatted into a [tidy format](http://garrettgman.github.io/tidying/){target="blank"} where all column values are transformed into correct variable values.  The full column names can be used as well. The package is still in early development and is currently meant more for a proof of concept and could be helpful for those that would like to use R with the data from ICPSR.
+
+- **[Rmd file that created this page](https://hathawayj.github.io/ihds/index.Rmd)**
+- **Use the' 'Code' buttons to see the code to generate the graphic**
 
 # 2011 IHDS Exploration (Individual)
 
 ```{r loaddata}
-
+#devtools::install_github("hathawayj/tidyICPSR")
+#install.packages("pacman")
+pacman::p_load(knitr, rmdformats, tidyverse, ggthemes, forcats, geofacet, tidyICPSR, growthstandards)
 ind11 <- read_rds(path = "../data/artifacts/2011_36151_India.Rds")
 
 
@@ -48,7 +60,7 @@ ind11 <- read_rds(path = "../data/artifacts/2011_36151_India.Rds")
 dat <- ind11 %>%
   mutate(stateid = str_remove_all(stateid, " [:digit:]+") %>% 
            str_replace_all("&", "and") %>% str_replace_all("Orissa", "Odisha"),
-         ro3 = str_remove_all(ro3, " [:digit:]+")) %>%
+         ro3 = str_remove_all(ro3, " [:digit:]+"), ro3 = str_remove_all(ro3, ";")) %>%
   select(idperson, stateid, hhid, distid, psuid, hhsplitid, idhh, 
          anthro_id = ap3, age = ro5, height1 = ap5, height2 = ap6, 
          anthro_position = ap7, weight1 = ap8, weight2 = ap9, 
@@ -67,25 +79,23 @@ kids <- dat %>%
   filter(age <= 5) %>% 
   left_join(household)
 
+
+
 ```
 
 
 ## Household Income
 
-The household income numbers are close to the reports I could find. The median household income from this study data is `r as.character(round(median(household$household_wages),0))` NRP.
+The household income numbers are close to the other reports we found. The median household income from this study data is `r as.character(round(median(household$household_wages),0))` NRP.
 
  - https://cmie.com/kommon/bin/sr.php?kall=warticle&dt=2016-07-04%2013:45:29&msec=170
  - https://www.quora.com/What-is-the-median-income-of-households-in-different-states-of-India
 
-```{r income_values}
-state_labels <- household %>% 
-  group_by(stateid) %>%
-  summarise(sum = sum(n), mean = mean(household_wages, na.rm = TRUE), median = median(household_wages, na.rm = TRUE))
-```
+The graphic below shows the median (dot) and the 25th and 75th percentiles (linerange) of household income for each region of India.
 
-This graphic shows the meidan (dot) and the 25th and 75th percentiles (linerange) of household income for each region of India.
+```{r income_viz_box, fig.height=5}
 
-```{r income_viz_box, fig.height=10}
+
 household %>%
   mutate(stateid = fct_reorder(stateid, household_wages, median)) %>% 
   group_by(stateid) %>%
@@ -100,41 +110,53 @@ household %>%
 
 ```
 
-This [geography based facet](https://github.com/hafen/geofacet) of India provides histograms of the household income distribution by region in India.
+Below we have displayed the household income (x-axis), and the line shows the proportion of households from the study at a given income. As of this work [100,000 INR converts to ~$1500](https://www.google.com/search?q=100000+INR+to+dollars&oq=100000+INR+to+dollars&aqs=chrome..69i57.6348j1j9&sourceid=chrome&ie=UTF-8){target="blank"}. 
 
-```{r income_viz, fig.height=16, fig.width = 12}
+```{r income_viz, fig.height=8}
+
+f90 <- function(x){ quantile(x, .9, na.rm = TRUE)}
+
+state_labels <- household %>% 
+  mutate(stateid = fct_reorder(stateid, household_wages, f90)) %>%
+  group_by(stateid) %>%
+  summarise(sum_n = sum(n), mean = mean(household_wages, na.rm = TRUE), 
+            median = median(household_wages, na.rm = TRUE), 
+            p90 = quantile(household_wages, .9, na.rm = TRUE),
+            p10 = quantile(household_wages, .1,na.rm = TRUE)) %>%
+  ungroup()
+
+
 household %>%
-  ggplot(aes(x = household_wages/10000)) +
-  geom_histogram() +
+  mutate(stateid = fct_reorder(stateid, household_wages, f90)) %>%
+  ggplot(aes(x = household_wages/100000)) +
+  # geom_rect(data = state_labels, aes(fill = p90),
+  #   xmin = -Inf, ymin = -Inf, xmax = Inf, ymax = Inf, alpha = 0.5,
+  #   inherit.aes = FALSE) +
+  stat_ecdf(geom = "step", pad = TRUE) +
   theme_bw() +
-  labs(x = "Household income (10,000 INR)", y = "Count", title = "Distribution of Household Income") +
-  facet_geo(~stateid, grid = india_grid2, scales = "free") 
+  coord_cartesian(xlim = c(0, 10)) +
+  scale_x_continuous(breaks = seq(0, 10, by = 2)) +
+  scale_y_continuous(breaks = seq(0, 1, by = .2)) +
+  geom_hline(color = "darkgrey", yintercept = c(.9)) +
+  geom_vline(data = state_labels, aes(xintercept = p90/100000), color = "darkgrey") +
+  labs(x = "Household income (100,000 INR)", y = "Proportion", title = "Distribution of Household Income") +
+  facet_wrap(~stateid, labeller = labeller(stateid = label_wrap_gen(10)), nrow = 6) 
+
+#  facet_geo(~stateid, grid = india_grid2, labeller = labeller(stateid = label_wrap_gen(10))) 
 
 ```
 
 
 ## Household Size
 
-The household count numbers seem to make sense based on numbers reported at the following links. The median household size from this study data is `r round(median(household$n),2)`. 
+The household count numbers seem to make sense based on numbers reported at the following links. The median household size from this study data is `r round(median(household$n),2)`. There is not much exciting in the below graphic. 
 
 - https://en.wikipedia.org/wiki/Indian_states_ranking_by_household_size
 - http://www.arcgis.com/home/item.html?id=6cf22970ea8c4b338a196879397a76e4
 
 
-```{r size_viz, fig.height=16, fig.width = 12}
-household %>%
-  ggplot(aes(x = n)) +
-  geom_histogram(color = "white") +
-# geom_vline(aes(xintercept = median), data = state_labels) +
-  theme_bw() +
-  labs(x = "Number in household", y = "Count", title = "Distribution of Household Size") +
-  scale_x_continuous(breaks = seq(0,30, by = 5), limits = c(0, 15)) +
-  theme(panel.grid.minor = element_blank()) +
-  facet_geo(~stateid, grid = india_grid2,  scales = "free_y") 
 
-```
-
-```{r size_viz_box, fig.height=16, fig.width = 12}
+```{r size_viz_box, fig.height=5}
 household %>%
   mutate(stateid = fct_reorder(stateid, n, median)) %>% 
   group_by(stateid) %>%
@@ -150,133 +172,134 @@ household %>%
 
 ```
 
-## Under 5 years old height distributions
+## One to four years old height distributions
 
-Some data quality issues will require further investigation. Also, the ages are grouped by year in the data.
+Some data quality issues will require further investigation for the heights. We have converted the heights into Z-scores (HAZ) using `growthstandards::who_htmc2zscore()`. The ages are grouped by year in the data so the HAZ values will be much more variable than usual as some of the values could be off by as much as 364 days. 
 
-```{r, fig.height=16, fig.width = 12}
+```{r, fig.height=8}
 # Household heights by age
 kids %>%
-  filter(age <= 5) %>%
-  ggplot(aes(y = height2 * 0.0328084, x = factor(age)), fill = "darkgrey") +
-  geom_boxplot() +
-#  geom_jitter(aes(color = sex), alpha = .5, width = .25) +
-  facet_geo(~stateid, grid = india_grid2) +
+  filter(age < 5, age > 0) %>%
+  mutate(age = ifelse(age == 0, .5, age),
+    zscore = who_htcm2zscore(agedays = .$age*365.25 , htcm = .$height2, sex = .$sex ), 
+    stateid = fct_reorder(stateid, zscore, median, na.rm = T)) %>%
+  ggplot(aes(y = zscore, x = factor(age)), fill = "darkgrey") +
+  geom_jitter(height = 0, width = .25, alpha = .2) +
+  geom_boxplot(fill = NA, color = "limegreen", outlier.colour = NA) +
   theme_bw() +
   scale_color_brewer(type = "qual") +
-  coord_cartesian(ylim = c(0, 4)) +
-  labs(y = "height (ft)", x = "gender", color = "gender", title = "Distribution of height by age group")
+  coord_cartesian(ylim = c(-7, 7)) +
+  labs(y = "Height (ft)", x = "Age", title = "Distribution of height by age group") +
+  facet_wrap(~stateid)
 
 ```
 
 
-## 0-1 year old heights by income category
+## 0-1-year-old heights by income category
 
-Remember that this figure shows all newborns from 0-12 months.
+Since the HAZ values are very sensitive to incorrect age day values, we show the heights of those labeled as zero years old. Remember that this figure shows all newborns from 0-365 days.
 
-```{r, fig.height=16, fig.width = 12}
+```{r, fig.width=6}
+# Household heights by age
 kids %>%
-  filter(age <= 1) %>%
-  mutate(income_groups = 
-           case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k",
-                      household_wages/ 10000 <= 5 ~ "between 25k & 50k",
-                      household_wages/ 10000 <= 10 ~ "between 50k & 100k",
-                      household_wages/ 10000 <= 25 ~ "between 100k & 250k",
-                      household_wages/ 10000 > 25 ~ "greater than 250k")) %>%
-  ggplot(aes(y =  height2 * 0.0328084, x = income_groups)) +
-  scale_y_continuous(limits = c(0, 3)) + 
-  geom_boxplot() +
-  labs(x = "Household wages", y = "height (ft)") +
-  coord_flip() +
-  theme_bw()
-```
-
-
-
-```{r, fig.height=16, fig.width = 12}
-kids %>%
-  filter(age <= 1) %>%
-  mutate(income_groups = 
-           case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k",
-                      household_wages/ 10000 <= 5 ~ "between 25k & 50k",
-                      household_wages/ 10000 <= 10 ~ "between 50k & 100k",
-                      household_wages/ 10000 <= 25 ~ "between 100k & 250k",
-                      household_wages/ 10000 > 25 ~ "greater than 250k")) %>%
-  ggplot(aes(y =  height2 * 0.0328084, x = income_groups)) +
-  scale_y_continuous(limits = c(0, 3)) + 
-  geom_boxplot() +
-  facet_geo(~stateid, grid = india_grid2) +
-  labs(x = "Household wages", y = "height (ft)") +
-  coord_flip() +
-  theme_bw()
-```
-
-## Under 5 years old weight distributions
-
-Some data quality issues will require further investigation.
-
-```{r, fig.height=16, fig.width = 12}
-kids %>%
-  filter(age <= 5) %>%
-  ggplot(aes(y = weight2 * 2.20462, x = factor(age)), fill = "darkgrey") +
-  geom_boxplot() +
-  #  geom_jitter(aes(color = sex), alpha = .5, width = .25) +
-  facet_geo(~stateid, grid = india_grid2) +
+  filter(age == 0) %>%
+  mutate(stateid = fct_reorder(stateid, height2, median, na.rm = T)) %>%
+  ggplot(aes(y = height2, x = stateid), fill = "darkgrey") +
+  geom_jitter(height = 0, width = .25, alpha = .2) +
+  geom_boxplot(fill = NA, color = "limegreen", outlier.colour = NA) +
   theme_bw() +
   scale_color_brewer(type = "qual") +
-  coord_cartesian(ylim = c(0, 45)) +
-  labs(y = "weight (lbs)", x = "gender", color = "gender", title = "Distribution of height by age group")
-
-
+  labs(y = "Height (cm)", x = "Region", title = "< 1 year heights") +
+  coord_flip()
 ```
 
-## 0-1-year-old weights by income category
 
-Remember that this figure shows all newborns from 0-12 months.
-
-```{r, fig.height=16, fig.width = 12}
+```{r, fig.height=8, fig.width = 6, include=FALSE}
+# Household heights by age
 kids %>%
-  filter(age <= 1) %>%
-  mutate(income_groups = 
-           case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k",
-                      household_wages/ 10000 <= 5 ~ "between 25k & 50k",
-                      household_wages/ 10000 <= 10 ~ "between 50k & 100k",
-                      household_wages/ 10000 <= 25 ~ "between 100k & 250k",
-                      household_wages/ 10000 > 25 ~ "greater than 250k")) %>%
-  ggplot(aes(y = weight2 * 2.200462, x = income_groups)) +
-  scale_y_continuous(limits = c(0, 25)) + 
-  geom_boxplot() +
-  labs(x = "Household wages (INR)", y = "weight (lbs)") +
-  coord_flip() +
-  theme_bw()
+  filter(age < 5, age > 0) %>%
+  mutate(zscore = who_htcm2zscore(agedays = .$age*365.25 , htcm = .$height2, sex = .$sex )) %>%
+  group_by(stateid) %>%
+  summarize(median_haz = median(zscore, na.rm = TRUE),
+            p90_wages = quantile(household_wages, .9,  na.rm = TRUE),
+            n = sum(n)) %>%
+  ungroup() %>%
+  filter(n > 500) %>%
+  ggplot(aes(x = p90_wages/100000, y = median_haz)) +
+  geom_point() +
+  theme_bw() +
+  labs(y = "Medain HAZ", x = "90th percentile household wage", title = "") 
+
 ```
 
 
 
-```{r, fig.height=16, fig.width = 12}
-kids %>%
-  filter(age <= 1) %>%
-  mutate(income_groups = 
-           case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k",
-                      household_wages/ 10000 <= 5 ~ "between 25k & 50k",
-                      household_wages/ 10000 <= 10 ~ "between 50k & 100k",
-                      household_wages/ 10000 <= 25 ~ "between 100k & 250k",
-                      household_wages/ 10000 > 25 ~ "greater than 250k")) %>%
-  ggplot(aes(y = weight2 * 2.200462, x = income_groups)) +
-  scale_y_continuous(limits = c(0, 25)) + 
-  geom_boxplot() +
-  facet_geo(~stateid, grid = india_grid2) +
-  labs(x = "Household wages (INR)", y = "weight (lbs)") +
-  coord_flip() +
-  theme_bw()
-```
+<!-- ## Under 5 years old weight distributions -->
+
+<!-- Some data quality issues will require further investigation. -->
+
+<!-- ```{r, fig.height=16, fig.width = 12} -->
+<!-- kids %>% -->
+<!--   filter(age <= 5) %>% -->
+<!--   ggplot(aes(y = weight2 * 2.20462, x = factor(age)), fill = "darkgrey") + -->
+<!--   geom_boxplot() + -->
+<!--   #  geom_jitter(aes(color = sex), alpha = .5, width = .25) + -->
+<!--   facet_geo(~stateid, grid = india_grid2) + -->
+<!--   theme_bw() + -->
+<!--   scale_color_brewer(type = "qual") + -->
+<!--   coord_cartesian(ylim = c(0, 45)) + -->
+<!--   labs(y = "weight (lbs)", x = "gender", color = "gender", title = "Distribution of height by age group") -->
+
+
+<!-- ``` -->
+
+<!-- ## 0-1-year-old weights by income category -->
+
+<!-- Remember that this figure shows all newborns from 0-12 months. -->
+
+<!-- ```{r, fig.height=16, fig.width = 12} -->
+<!-- kids %>% -->
+<!--   filter(age <= 1) %>% -->
+<!--   mutate(income_groups =  -->
+<!--            case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k", -->
+<!--                       household_wages/ 10000 <= 5 ~ "between 25k & 50k", -->
+<!--                       household_wages/ 10000 <= 10 ~ "between 50k & 100k", -->
+<!--                       household_wages/ 10000 <= 25 ~ "between 100k & 250k", -->
+<!--                       household_wages/ 10000 > 25 ~ "greater than 250k")) %>% -->
+<!--   ggplot(aes(y = weight2 * 2.200462, x = income_groups)) + -->
+<!--   scale_y_continuous(limits = c(0, 25)) +  -->
+<!--   geom_boxplot() + -->
+<!--   labs(x = "Household wages (INR)", y = "weight (lbs)") + -->
+<!--   coord_flip() + -->
+<!--   theme_bw() -->
+<!-- ``` -->
+
+
+
+<!-- ```{r, fig.height=16, fig.width = 12} -->
+<!-- kids %>% -->
+<!--   filter(age <= 1) %>% -->
+<!--   mutate(income_groups =  -->
+<!--            case_when( household_wages/ 10000 <= 2.5 ~ "less than 25k", -->
+<!--                       household_wages/ 10000 <= 5 ~ "between 25k & 50k", -->
+<!--                       household_wages/ 10000 <= 10 ~ "between 50k & 100k", -->
+<!--                       household_wages/ 10000 <= 25 ~ "between 100k & 250k", -->
+<!--                       household_wages/ 10000 > 25 ~ "greater than 250k")) %>% -->
+<!--   ggplot(aes(y = weight2 * 2.200462, x = income_groups)) + -->
+<!--   scale_y_continuous(limits = c(0, 25)) +  -->
+<!--   geom_boxplot() + -->
+<!--   facet_geo(~stateid, grid = india_grid2) + -->
+<!--   labs(x = "Household wages (INR)", y = "weight (lbs)") + -->
+<!--   coord_flip() + -->
+<!--   theme_bw() -->
+<!-- ``` -->
 
 
 # 2011 IHDS Exploration (Births)
 
 ## Distribution of number of births per household
 
-```{r, fig.height = 10}
+```{r, fig.width = 6}
 dat <- read_rds(path = "../data/artifacts/2011_36151_India_births.Rds")
 
 
@@ -301,6 +324,7 @@ The development R package [tidyICPSR]() has the functions used to download and p
 # Code
 
 All of the R code to download, process, and replicate this analysis (including the code that generates this document) is available [here](https://github.com/hathawayj/ihds).
+
 
 
 
